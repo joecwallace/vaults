@@ -2,6 +2,7 @@
 
 namespace Wallace\Vaults\OnePassword;
 
+use InvalidArgumentException;
 use Wallace\Vaults\Vault as BaseVault;
 
 class Vault implements BaseVault
@@ -10,12 +11,19 @@ class Vault implements BaseVault
 
     private $vaultId;
 
-    public function __construct(Op $op, string $vaultId = null)
+    public function __construct(Op $op, string $vaultId)
     {
         $this->op = $op;
+        $this->vaultId = $vaultId;
+    }
 
-        // TODO: dependency on config()
-        $this->vaultId = $vaultId ?? config('one-password.vault-id');
+    public static function init(array $options) : self
+    {
+        if (empty($options['vault_id'])) {
+            throw new RequiredOptionException('vault_id');
+        }
+
+        return new static(new Op($options), $options['vault_id']);
     }
 
     public function store(string $title, string $username, string $password) : string
@@ -28,10 +36,13 @@ class Vault implements BaseVault
 
     public function find(string $id) : array
     {
-        // TODO: dependency on collect()
-        return collect($this->getItem($id)->details->fields)->mapWithKeys(function ($field) {
-            return [$field->name => $field->value];
-        })->all();
+        $result = [];
+
+        foreach ($this->getItem($id)->details->fields as $field) {
+            $result[$field->name] = $field->value;
+        }
+
+        return $result;
     }
 
     public function delete(string $id)
@@ -41,8 +52,7 @@ class Vault implements BaseVault
 
     private function fillTemplate(array $template, array $fields) : array
     {
-        // TODO: dependency on collect()
-        $template['fields'] = collect($template['fields'])->map(function ($field) use ($fields) {
+        $template['fields'] = array_map(function ($field) use ($fields) {
             $fieldName = $field['name'];
 
             if (array_key_exists($fieldName, $fields)) {
@@ -50,7 +60,7 @@ class Vault implements BaseVault
             }
 
             return $field;
-        })->all();
+        }, $template['fields']);
 
         return $template;
     }

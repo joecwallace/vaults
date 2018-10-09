@@ -2,8 +2,12 @@
 
 namespace Wallace\Vaults\OnePassword;
 
+use Wallace\Vaults\Traits\RequiresKeys;
+
 class Op
 {
+    use RequiresKeys;
+
     private $subdomain;
 
     private $username;
@@ -12,15 +16,14 @@ class Op
 
     private $masterPassword;
 
-    private $sessionToken = '';
-
-    public function __construct($subdomain = null, $username = null, $secretKey = null, $masterPassword = null)
+    public function __construct(array $options)
     {
-        // TODO: dependency on config()
-        $this->subdomain = $subdomain ?? config('one-password.subdomain');
-        $this->username = $username ?? config('one-password.username');
-        $this->secretKey = $secretKey ?? config('one-password.secret-key');
-        $this->masterPassword = $masterPassword ?? config('one-password.master-password');
+        $this->requireKeys(['subdomain', 'username', 'secret_key', 'master_password'], $options);
+
+        $this->subdomain = $options['subdomain'];
+        $this->username = $options['username'];
+        $this->secretKey = $options['secret_key'];
+        $this->masterPassword = $options['master_password'];
     }
 
     public function exec(string $command)
@@ -31,9 +34,8 @@ class Op
     private function runCommand($command)
     {
         $output = [];
-        $exitCode = 0;
 
-        exec($command, $output, $exitCode);
+        exec($command, $output);
 
         return implode(PHP_EOL, $output);
     }
