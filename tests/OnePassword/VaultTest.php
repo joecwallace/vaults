@@ -43,33 +43,16 @@ class VaultTest extends TestCase
     public function testThatItCanStoreANewItem()
     {
         $processStub = $this->createMock(Process::class);
-        $processStub->method('exec')->with($this->logicalOr(
-            $this->stringContains('get template Login'),
-            $this->logicalAnd(
-                $this->stringContains('create item Login'),
-                $this->stringContains('My item'),
-                $this->stringContains(base64_encode(trim(json_encode([
-                    'fields' => [
-                        ['name' => 'username', 'value' => 'test.user'],
-                        ['name' => 'password', 'value' => 's3cr3t'],
-                        ['name' => 'baz', 'value' => 'quux'],
-                    ],
-                ]), '='))),
-                $this->stringContains('fooBarVault')
-            )
-        ))->will($this->returnCallback(function ($argument) {
-            if (strpos($argument, 'get template Login') !== false) {
-                return json_encode([
-                    'fields' => [
-                        ['name' => 'username', 'value' => 'foo'],
-                        ['name' => 'password', 'value' => 'bar'],
-                        ['name' => 'baz', 'value' => 'quux'],
-                    ],
-                ]);
-            } elseif (strpos($argument, 'create item Login') !== false) {
-                return json_encode(['uuid' => 'some-uuid']);
-            }
-        }));
+        $processStub->method('exec')->with($this->eitherGetTemplateOrCreateItem())->will($this->returnEncodedJson([
+            'get template Login' => [
+                'fields' => [
+                    ['name' => 'username', 'value' => 'foo'],
+                    ['name' => 'password', 'value' => 'bar'],
+                    ['name' => 'baz', 'value' => 'quux'],
+                ],
+            ],
+            'create item Login' => ['uuid' => 'some-uuid'],
+        ]));
 
         $newUuid = $this->createVaultWithProcess($processStub)->store('My item', 'test.user', 's3cr3t');
 
@@ -94,5 +77,35 @@ class VaultTest extends TestCase
         $op->setProcess($process);
 
         return new Vault($op, 'fooBarVault');
+    }
+
+    private function eitherGetTemplateOrCreateItem()
+    {
+        return $this->logicalOr(
+            $this->stringContains('get template Login'),
+            $this->logicalAnd(
+                $this->stringContains('create item Login'),
+                $this->stringContains('My item'),
+                $this->stringContains(base64_encode(trim(json_encode([
+                    'fields' => [
+                        ['name' => 'username', 'value' => 'test.user'],
+                        ['name' => 'password', 'value' => 's3cr3t'],
+                        ['name' => 'baz', 'value' => 'quux'],
+                    ],
+                ]), '='))),
+                $this->stringContains('fooBarVault')
+            )
+        );
+    }
+
+    private function returnEncodedJson(array $matchAndPayload)
+    {
+        return $this->returnCallback(function ($argument) use ($matchAndPayload) {
+            foreach ($matchAndPayload as $match => $payload) {
+                if (strpos($argument, $match) !== false) {
+                    return json_encode($payload);
+                }
+            }
+        });
     }
 }
