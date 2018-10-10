@@ -2,7 +2,7 @@
 
 namespace Wallace\Vaults\OnePassword;
 
-use InvalidArgumentException;
+use Wallace\Vaults\Exceptions\RequiredOptionException;
 use Wallace\Vaults\Vault as BaseVault;
 
 class Vault implements BaseVault

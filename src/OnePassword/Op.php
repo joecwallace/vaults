@@ -2,11 +2,14 @@
 
 namespace Wallace\Vaults\OnePassword;
 
+use Wallace\Vaults\Process;
 use Wallace\Vaults\Traits\RequiresKeys;
 
 class Op
 {
     use RequiresKeys;
+
+    private $process = null;
 
     private $subdomain;
 
@@ -33,11 +36,7 @@ class Op
 
     private function runCommand($command)
     {
-        $output = [];
-
-        exec($command, $output);
-
-        return implode(PHP_EOL, $output);
+        return $this->getProcess()->exec($command);
     }
 
     private function buildCommand($args) : string
@@ -58,5 +57,19 @@ class Op
         ];
 
         return implode(' ', $args);
+    }
+
+    public function setProcess(Process $process) : void
+    {
+        $this->process = $process;
+    }
+
+    public function getProcess() : Process
+    {
+        if (is_null($this->process)) {
+            $this->process = new Process([]);
+        }
+
+        return $this->process;
     }
 }
