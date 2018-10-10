@@ -45,7 +45,7 @@ class Vault implements BaseVault
         return $result;
     }
 
-    public function delete(string $id)
+    public function delete(string $id) : void
     {
         $this->deleteItem($id);
     }
@@ -70,7 +70,7 @@ class Vault implements BaseVault
         return json_decode($this->op->exec('get template Login'), true);
     }
 
-    private function encode(array $data)
+    private function encode(array $data) : string
     {
         return base64_encode(trim(json_encode($data), '='));
     }
