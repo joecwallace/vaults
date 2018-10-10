@@ -8,5 +8,5 @@ interface Vault
 
     public function store(string $service, string $username, string $password) : string;
 
-    public function delete(string $id);
+    public function delete(string $id) : array;
 }

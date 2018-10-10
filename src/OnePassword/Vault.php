@@ -31,23 +31,24 @@ class Vault implements BaseVault
         $data = $this->fillTemplate($this->getTemplateForLogin(), compact('username', 'password'));
         $payload = $this->encode($data);
 
-        return $this->createItem('Login', $title, $payload)->uuid;
+        return $this->createItem('Login', $title, $payload)['uuid'];
     }
 
     public function find(string $id) : array
     {
         $result = [];
+        $item = $this->getItem($id);
 
-        foreach ($this->getItem($id)->details->fields as $field) {
-            $result[$field->name] = $field->value;
+        foreach ($item['details']['fields'] as $field) {
+            $result[$field['name']] = $field['value'];
         }
 
         return $result;
     }
 
-    public function delete(string $id) : void
+    public function delete(string $id) : array
     {
-        $this->deleteItem($id);
+        return $this->deleteItem($id);
     }
 
     private function fillTemplate(array $template, array $fields) : array
@@ -67,7 +68,7 @@ class Vault implements BaseVault
 
     private function getTemplateForLogin() : array
     {
-        return json_decode($this->op->exec('get template Login'), true);
+        return $this->execAndDecode('get template Login');
     }
 
     private function encode(array $data) : string
@@ -75,18 +76,23 @@ class Vault implements BaseVault
         return base64_encode(trim(json_encode($data), '='));
     }
 
-    private function createItem($type, $title, $payload)
+    private function createItem($type, $title, $payload) : array
     {
-        return json_decode($this->op->exec("create item {$type} {$payload} --title=\"{$title}\" --vault={$this->vaultId}"));
+        return $this->execAndDecode("create item {$type} {$payload} --title=\"{$title}\" --vault={$this->vaultId}");
     }
 
-    private function getItem($id)
+    private function getItem($id) : array
     {
-        return json_decode($this->op->exec("get item {$id}"));
+        return $this->execAndDecode("get item {$id}");
     }
 
-    private function deleteItem($id)
+    private function deleteItem($id) : array
     {
-        return json_decode($this->op->exec("delete item {$id}"));
+        return $this->execAndDecode("delete item {$id}");
+    }
+
+    private function execAndDecode($command): array
+    {
+        return json_decode($this->op->exec($command), true);
     }
 }
