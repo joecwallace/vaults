@@ -20,4 +20,19 @@ class VaultTest extends TestCase
 
         Vault::init($options);
     }
+
+    public function testThatItCanFindAnExistingItem()
+    {
+        // $vault->find()
+    }
+
+    public function testThatItCanStoreANewItem()
+    {
+        // $vault->store()
+    }
+
+    public function testThatItCanDeleteAnItem()
+    {
+        // $vault->delete()
+    }
 }
