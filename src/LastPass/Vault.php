@@ -20,14 +20,12 @@ class Vault implements BaseVault
 
     public function find(string $id) : array
     {
-        $results = json_decode($this->lpass->exec("show {$id}"), true);
-
         $results = array_map(function ($item) {
             return [
                 'username' => $item['username'],
                 'password' => $item['password'],
             ];
-        }, $results);
+        }, $this->execAndDecode("show {$id}"));
 
         return reset($results);
     }
@@ -39,11 +37,16 @@ class Vault implements BaseVault
 
         $this->lpass->exec("add --non-interactive {$service}", "echo \"Username: {$username}; Password: {$password}\"");
 
-        return json_decode($this->lpass->exec("show {$service}"), true)['id'];
+        return $this->execAndDecode("show {$service}")['id'];
     }
 
     public function delete(string $id) : array
     {
-        return json_decode($this->lpass->exec("rm {$id}"), true);
+        return $this->execAndDecode("rm {$id}");
+    }
+
+    private function execAndDecode(string $command) : array
+    {
+        return json_decode($this->lpass->exec($command), true);
     }
 }
