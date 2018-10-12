@@ -36,7 +36,7 @@ class OpTest extends TestCase
     {
         $opCommand = 'arbitrary arguments here';
 
-        $processMock = $this->getMockBuilder(Process::class)->setMethods(['exec',])->getMock();
+        $processMock = $this->getMockBuilder(Process::class)->setMethods(['exec'])->getMock();
         $processMock->expects($this->once())->method('exec')->with($this->equalTo(
             "op signin SUBDOMAIN USERNAME SECRET_KEY 'MASTER_PASSWORD' --output=raw | op {$opCommand} 2>&1"
         ));

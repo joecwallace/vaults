@@ -62,13 +62,11 @@ class VaultTest extends TestCase
     public function testThatItCanDeleteAnItem()
     {
         $processStub = $this->createMock(Process::class);
-        $processStub->method('exec')->with($this->stringContains('delete item jkl'))->willReturn(json_encode([
+        $processStub->expects($this->once())->method('exec')->with($this->stringContains('delete item jkl'))->willReturn(json_encode([
             'foo' => 'bar',
         ]));
 
         $deletedItem = $this->createVaultWithProcess($processStub)->delete('jkl');
-
-        $this->assertEquals(['foo' => 'bar'], $deletedItem);
     }
 
     private function createVaultWithProcess(Process $process) : Vault

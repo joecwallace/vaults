@@ -46,9 +46,9 @@ class Vault implements BaseVault
         return $result;
     }
 
-    public function delete(string $id) : array
+    public function delete(string $id) : void
     {
-        return $this->deleteItem($id);
+        $this->deleteItem($id);
     }
 
     private function fillTemplate(array $template, array $fields) : array
