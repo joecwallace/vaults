@@ -25,7 +25,7 @@ class Vault implements BaseVault
                 'username' => $item['username'],
                 'password' => $item['password'],
             ];
-        }, $this->execAndDecode("show {$id}"));
+        }, $this->execAndDecode("show -j {$id}"));
 
         return reset($results);
     }
@@ -33,16 +33,19 @@ class Vault implements BaseVault
     public function store(string $service, string $username, string $password) : string
     {
         $service = escapeShellArg($service);
-        $password = escapeShellArg($password);
 
-        $this->lpass->exec("add --non-interactive {$service}", "echo \"Username: {$username}; Password: {$password}\"");
+        $this->lpass->exec("add --sync=now --non-interactive {$service}", "(echo \"Username:{$username}\"; echo \"Password:{$password}\")");
 
-        return $this->execAndDecode("show {$service}")['id'];
+        $results = array_map(function ($item) {
+            return $item['id'];
+        }, $this->execAndDecode("show --json --sync=now {$service}"));
+
+        return reset($results);
     }
 
-    public function delete(string $id) : array
+    public function delete(string $id) : void
     {
-        return $this->execAndDecode("rm {$id}");
+        $this->lpass->exec("rm {$id}");
     }
 
     private function execAndDecode(string $command) : array

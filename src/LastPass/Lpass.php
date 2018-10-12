@@ -30,7 +30,14 @@ class Lpass
 
     private function runCommand($command)
     {
-        return $this->getProcess()->exec($command);
+        $return = $this->getProcess()->exec($command);
+
+        $lines = explode(PHP_EOL, $return);
+        if (strpos($lines[0], 'Success: Logged in as ') === 0) {
+            $lines = array_splice($lines, 1);
+        }
+
+        return implode(PHP_EOL, $lines);
     }
 
     private function buildCommand($args, $piped = '') : string

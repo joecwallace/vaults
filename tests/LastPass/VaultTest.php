@@ -21,7 +21,7 @@ class VaultTest extends TestCase
     public function testThatItCanFindAnExistingItem()
     {
         $processStub = $this->createMock(Process::class);
-        $processStub->method('exec')->with($this->stringContains('lpass show SOME_ID'))->willReturn(json_encode([
+        $processStub->method('exec')->with($this->stringContains('lpass show -j SOME_ID'))->willReturn(json_encode([
             [
                 'username' => 'some.test.user',
                 'password' => 'plainTextPassword',
@@ -37,9 +37,9 @@ class VaultTest extends TestCase
     {
         $processStub = $this->createMock(Process::class);
         $processStub->expects($this->exactly(2))->method('exec')->with($this->logicalOr(
-            $this->stringContains("echo \"Username: test.user; Password: 's3cr3t'\" | lpass add --non-interactive 'My item'"),
-            $this->stringContains("lpass show 'My item'")
-        ))->willReturn(json_encode(['id' => 'some-uuid']));
+            $this->stringContains("(echo \"Username:test.user\"; echo \"Password:s3cr3t\") | lpass add --sync=now --non-interactive 'My item'"),
+            $this->stringContains("lpass show --json --sync=now 'My item'")
+        ))->willReturn(json_encode([['id' => 'some-uuid']]));
 
         $newUuid = $this->createVaultWithProcess($processStub)->store('My item', 'test.user', 's3cr3t');
 
@@ -49,13 +49,9 @@ class VaultTest extends TestCase
     public function testThatItCanDeleteAnItem()
     {
         $processStub = $this->createMock(Process::class);
-        $processStub->method('exec')->with($this->stringContains('rm jkl'))->willReturn(json_encode([
-            'foo' => 'bar',
-        ]));
+        $processStub->expects($this->once())->method('exec')->with($this->stringContains('rm jkl'));
 
         $deletedItem = $this->createVaultWithProcess($processStub)->delete('jkl');
-
-        $this->assertEquals(['foo' => 'bar'], $deletedItem);
     }
 
     private function createVaultWithProcess(Process $process) : Vault
